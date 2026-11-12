@@ -2,6 +2,38 @@
 
 This cookbook shows how to extend dsh-superagent. It uses the terms in [001 Domain model](001-domain.md) and [002 Authorization](002-authorization.md), and the components in [007 Architecture](007-architecture.md).
 
+## Workspace-local bugs
+
+Enable the bundle's optional `dsh-superagent-bug-file` plugin, then configure its Source in the panel:
+
+```json
+{ "workspace": "/absolute/workspace", "bugFile": "bug.md", "pollSeconds": 10, "verifyCommand": "/absolute/trusted-candidate-check" }
+```
+
+Each deployment has one `bug-file` instance for one workspace and one `bug.md`. Use separate deployments for separate workspaces; the registry supports one instance per kind. The existing router and Executor still assess and execute each request. GitHub remains the delivery channel; intake creates no GitHub Issue.
+
+Keep the four fields and checkbox in the file:
+
+```text
+- [ ] med | panel | Fix the margin | 2026-11-12
+```
+
+Every unresolved line is a direct human request from Zach. Startup installs that local identity automatically; there is no editable allowed list, bot admission table or approval step. Use the Superagent panel for questions and attention. Local intake has no external reply Channel.
+
+The workspace owns `.dsh/superagent-bugs.json`. It persists monotonic local IDs, revisions, emission status, deletion and verification receipts. Stable work IDs are `bug:<workspace-key>:<local-id>`, with the key derived from the canonical workspace path. A title edit emits a new Trigger revision on the same Thread and reaches the same subscribed Ticket. Exact lines match first; an edited title matches the remaining priority, area and date. An ambiguous edit fails without changing the file or sidecar: restore the prior titles and make one title edit at a time. Reintroduced deleted lines get new IDs. Keep the sidecar when restarting; do not copy it between workspaces or change its bug-file path.
+
+Paths must remain inside the configured canonical workspace. Bug files and sidecars must be regular files without hard links or symlinks; `.dsh` must be a real local directory. A missing bug file records deletion and is never recreated. Polls lock the sidecar, and state writes use atomic replacement. No other workspace's intake is read or written.
+
+`verifyCommand` is a trusted operator command, run in the Ticket's `execution.directory`, an independent Git worktree containing the Executor's committed result. It must check that specific bug's delivered result. A ready report, an existing PR, a merge or a passing check in the intake checkout is insufficient. The Source requires a ready report and an Executor-ended Ticket with outcome `completed` or `merged`, then checks the candidate's clean tracked files and commit before and after verification. An empty command leaves the checkbox unresolved and adds a verification fact to the Thread in the panel.
+
+The command receives `DSH_SUPERAGENT_BUG_ID`, `DSH_SUPERAGENT_BUG_REVISION`, `DSH_SUPERAGENT_BUG_TICKET` and `DSH_SUPERAGENT_BUG_COMMIT`. Exit nonzero when verification fails. On success, print only this JSON receipt, with values matching those variables:
+
+```json
+{ "verified": true, "bugId": "bug:<workspace-key>:1", "revision": 1, "ticketId": "<ticket-id>", "commit": "<candidate-commit>" }
+```
+
+Only a matching successful receipt permits `[x]`. The Source rereads the Ticket and the bug file before writing, so a concurrent title edit or resumed Ticket cannot be resolved by the old check. It retains the receipt in the workspace sidecar. The existing command timeout and cancellation apply; plugin disposal aborts and awaits polling and verification.
+
 ## Add a Source
 
 This recipe implements a Source kind called `webhook`. It reads an imaginary message queue through an invented CLI, `hookq`, and converts messages to Triggers. All other interfaces are part of dsh-superagent.
