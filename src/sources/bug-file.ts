@@ -140,7 +140,7 @@ function reconcile(state: BugState, current: BugLine[]): Map<BugLine, BugRecord>
   }
   for (const line of current.filter(line => !matched.has(line))) {
     const candidates = state.bugs.filter(bug => bug.status !== 'deleted' && !used.has(bug.localId) && sameAnchor(bug.fields, line.fields))
-    if (candidates.length > 1) throw new Error('Ambiguous bug title edit; keep priority, area and date distinct')
+    if (candidates.length > 1) throw new Error('Ambiguous bug title edit; keep severity, area and date distinct')
     const previous = candidates[0]
     const bug = previous ?? { localId: state.nextId++, fields: line.fields, at: new Date().toISOString(), revision: 1,
       emitted: false, status: 'unresolved' as const }

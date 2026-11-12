@@ -200,14 +200,15 @@ it('uses canonical workspace identity and rejects foreign bug files, directories
   expect(readFileSync(join(b.root, '.dsh/superagent-bugs.json'), 'utf8')).toBe('{foreign}')
 })
 
-it('polls through the plugin lifecycle and awaits disposal', async () => {
-  const h = await workspace(), disposers: (() => unknown)[] = []
+it('polls high-severity intake through the plugin lifecycle and awaits disposal', async () => {
+  const h = await workspace('- [ ] high | panel | Fix the margin | 2026-11-12\n'), disposers: (() => unknown)[] = []
   const registry = new SourceRegistry(() => SettingsSchema.parse({}))
   apply({ orchestrator: { sources: registry, context: () => h.ctx },
     effect: (work: () => () => unknown) => { disposers.push(work()) } } as never)
   try {
     expect(registry.kind('bug-file')).toBe(bugFileKind)
     await vi.waitFor(() => expect(h.received).toHaveLength(1))
+    expect(h.received[0]!.text).toBe('high | panel | Fix the margin | 2026-11-12')
   } finally { for (const dispose of disposers.reverse()) await dispose() }
   expect(registry.kind('bug-file')).toBeUndefined()
 })
@@ -222,8 +223,8 @@ it('stops before another intake when cancellation arrives during receive', async
   expect(h.received).toHaveLength(2)
 })
 
-it('automatically installs the local requester policy and reaches the existing router and executor', async () => {
-  const h = await workspace(), host = await startRuntime(), disposers: (() => unknown)[] = []
+it('automatically installs the local requester policy and routes low-severity intake to the existing executor', async () => {
+  const h = await workspace('- [ ] low | panel | Fix the margin | 2026-11-12\n'), host = await startRuntime(), disposers: (() => unknown)[] = []
   try {
     const settings = host.runtime.store.settings()
     host.runtime.store.saveSettings({ ...settings, sources: { ...settings.sources, 'bug-file': { enabled: true, config: h.config } } })
@@ -234,7 +235,9 @@ it('automatically installs the local requester policy and reaches the existing r
       acknowledgement: 'Fix the panel margin.' })
     await host.runtime.idle()
     const ticketId = (result.ticket as { ticket_id: string }).ticket_id
-    expect(host.runtime.store.tickets.get(ticketId)!.mandate.strength).toBe('explicit')
+    const ticket = host.runtime.store.tickets.get(ticketId)!
+    expect(ticket.mandate.strength).toBe('explicit')
+    expect(host.runtime.store.triggers.get(ticket.origin.triggerId)!.text).toBe('low | panel | Fix the margin | 2026-11-12')
     expect(host.agents.has(`worker-${ticketId}`)).toBe(true)
     expect(bugFileKind.policy!.fields).toEqual([])
     expect(bugFileKind.policy!.rows).toBeUndefined()
@@ -288,7 +291,7 @@ it('fails without overwriting malformed state or ambiguously edited identities',
   await h.poll()
   const sidecar = join(h.root, '.dsh/superagent-bugs.json'), before = readFileSync(sidecar, 'utf8')
   writeFileSync(join(h.root, 'bug.md'), line.replace('Fix the margin', 'Fix the border'))
-  await expect(h.poll()).rejects.toThrow('Ambiguous')
+  await expect(h.poll()).rejects.toThrow('Ambiguous bug title edit; keep severity, area and date distinct')
   expect(readFileSync(sidecar, 'utf8')).toBe(before)
   writeFileSync(sidecar, '{broken')
   await expect(h.poll()).rejects.toThrow()

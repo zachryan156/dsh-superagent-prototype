@@ -12,7 +12,7 @@ Enable the bundle's optional `dsh-superagent-bug-file` plugin, then configure it
 
 Each deployment has one `bug-file` instance for one workspace and one `bug.md`. Use separate deployments for separate workspaces; the registry supports one instance per kind. The existing router and Executor still assess and execute each request. GitHub remains the delivery channel; intake creates no GitHub Issue.
 
-Keep the four fields and checkbox in the file:
+Keep the checkbox and four fields, `severity | area | title | date`, in the file. Current severity values are `high`, `med` and `low`:
 
 ```text
 - [ ] med | panel | Fix the margin | 2026-11-12
@@ -20,7 +20,7 @@ Keep the four fields and checkbox in the file:
 
 Every unresolved line is a direct human request from Zach. Startup installs that local identity automatically; there is no editable allowed list, bot admission table or approval step. Use the Superagent panel for questions and attention. Local intake has no external reply Channel.
 
-The workspace owns `.dsh/superagent-bugs.json`. It persists monotonic local IDs, revisions, emission status, deletion and verification receipts. Stable work IDs are `bug:<workspace-key>:<local-id>`, with the key derived from the canonical workspace path. A title edit emits a new Trigger revision on the same Thread and reaches the same subscribed Ticket. Exact lines match first; an edited title matches the remaining priority, area and date. An ambiguous edit fails without changing the file or sidecar: restore the prior titles and make one title edit at a time. Reintroduced deleted lines get new IDs. Keep the sidecar when restarting; do not copy it between workspaces or change its bug-file path.
+The workspace owns `.dsh/superagent-bugs.json`. It persists monotonic local IDs, revisions, emission status, deletion and verification receipts. Stable work IDs are `bug:<workspace-key>:<local-id>`, with the key derived from the canonical workspace path. A title edit emits a new Trigger revision on the same Thread and reaches the same subscribed Ticket. Exact lines match first; an edited title matches the remaining severity, area and date. An ambiguous edit fails without changing the file or sidecar: restore the prior titles and make one title edit at a time. Reintroduced deleted lines get new IDs. Keep the sidecar when restarting; do not copy it between workspaces or change its bug-file path.
 
 Paths must remain inside the configured canonical workspace. Bug files and sidecars must be regular files without hard links or symlinks; `.dsh` must be a real local directory. A missing bug file records deletion and is never recreated. Polls lock the sidecar, and state writes use atomic replacement. No other workspace's intake is read or written.
 
