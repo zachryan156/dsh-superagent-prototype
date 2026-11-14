@@ -128,14 +128,15 @@ To start the profile at user login and restart it after a process crash, render 
 ```sh
 root=$PWD
 control=$PWD/.artifacts/control/profiles/superagent
+dsh_bin=$(dirname "$(command -v dsh)")
 mkdir -p "$HOME/.config/systemd/user"
-sed -e "s|@ROOT@|$root|g" -e "s|@CONTROL@|$control|g" -e 's|@URL@|http://127.0.0.1:3082|g' \
+sed -e "s|@ROOT@|$root|g" -e "s|@CONTROL@|$control|g" -e "s|@DSH_BIN@|$dsh_bin|g" -e "s|@PATH@|$PATH|g" -e 's|@URL@|http://127.0.0.1:3082|g' \
   deploy/dsh-superagent.service.in > "$HOME/.config/systemd/user/dsh-superagent@.service"
 systemctl --user daemon-reload
 systemctl --user enable --now dsh-superagent@superagent.service
 ```
 
-The unit's `Type=forking` and PID file let systemd restart the DSH process after a killed process or crash. Its stop command does not write the intentional-stop marker, so a normal user-manager shutdown is followed by recovery at the next login. Use `scripts/dsh-superagent stop` when the profile must remain stopped; the unit condition then skips automatic startup until a later explicit `start` or `restart`.
+The generated unit puts the directory containing `dsh` first in its explicit `PATH`, because a user systemd manager may not inherit the shell's mise-managed Node path. Re-render the unit after changing the `dsh` installation or shell `PATH`. The unit's `Type=forking` and PID file let systemd restart the DSH process after a killed process or crash. Its stop command does not write the intentional-stop marker, so a normal user-manager shutdown is followed by recovery at the next login. Use `scripts/dsh-superagent stop` when the profile must remain stopped; the unit condition then skips automatic startup until a later explicit `start` or `restart`.
 
 Each profile stores logs and control files under `.artifacts/`:
 

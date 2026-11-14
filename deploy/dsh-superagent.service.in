@@ -6,6 +6,7 @@ ConditionPathExists=!@CONTROL@/manually-stopped
 [Service]
 Type=forking
 WorkingDirectory=@ROOT@
+Environment=PATH=@DSH_BIN@:@PATH@
 ExecStart="@ROOT@/scripts/dsh-superagent" --profile %i --url @URL@ start --respect-stop
 ExecStop="@ROOT@/scripts/dsh-superagent" --profile %i --url @URL@ --no-stop-marker stop
 PIDFile=@CONTROL@/service.pid
