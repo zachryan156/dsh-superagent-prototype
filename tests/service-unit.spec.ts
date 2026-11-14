@@ -7,6 +7,7 @@ const unit = readFileSync(join(import.meta.dirname, '..', 'deploy', 'dsh-superag
 
 it('gives the user systemd service dsh and preserves intentional-stop recovery', () => {
   expect(unit).toContain('Environment=PATH=@DSH_BIN@:@PATH@')
+  expect(unit).toContain('SuccessExitStatus=2 3')
   expect(unit).toContain('ConditionPathExists=!@CONTROL@/manually-stopped')
   expect(unit).toContain('ExecStart="@ROOT@/scripts/dsh-superagent" --profile %i --url @URL@ start --respect-stop')
   expect(unit).toContain('ExecStop="@ROOT@/scripts/dsh-superagent" --profile %i --url @URL@ --no-stop-marker stop')

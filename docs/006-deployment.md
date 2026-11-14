@@ -136,7 +136,7 @@ systemctl --user daemon-reload
 systemctl --user enable --now dsh-superagent@superagent.service
 ```
 
-The generated unit puts the directory containing `dsh` first in its explicit `PATH`, because a user systemd manager may not inherit the shell's mise-managed Node path. Re-render the unit after changing the `dsh` installation or shell `PATH`. The unit's `Type=forking` and PID file let systemd restart the DSH process after a killed process or crash. Its stop command does not write the intentional-stop marker, so a normal user-manager shutdown is followed by recovery at the next login. Use `scripts/dsh-superagent stop` when the profile must remain stopped; the unit condition then skips automatic startup until a later explicit `start` or `restart`.
+The generated unit puts the directory containing `dsh` first in its explicit `PATH`, because a user systemd manager may not inherit the shell's mise-managed Node path. Re-render the unit after changing the `dsh` installation or shell `PATH`. The unit's `Type=forking` and PID file let systemd restart the DSH process after a killed process or crash. Exit codes 2 and 3 mean the process is running but a component reports an error or setup is pending, so the unit treats them as successful startup and leaves the operator-visible problem in place. Its stop command does not write the intentional-stop marker, so a normal user-manager shutdown is followed by recovery at the next login. Use `scripts/dsh-superagent stop` when the profile must remain stopped; the unit condition then skips automatic startup until a later explicit `start` or `restart`.
 
 Each profile stores logs and control files under `.artifacts/`:
 

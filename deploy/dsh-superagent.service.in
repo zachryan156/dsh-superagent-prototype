@@ -11,6 +11,7 @@ ExecStart="@ROOT@/scripts/dsh-superagent" --profile %i --url @URL@ start --respe
 ExecStop="@ROOT@/scripts/dsh-superagent" --profile %i --url @URL@ --no-stop-marker stop
 PIDFile=@CONTROL@/service.pid
 Restart=on-failure
+SuccessExitStatus=2 3
 RestartSec=10s
 TimeoutStartSec=90s
 TimeoutStopSec=300s
