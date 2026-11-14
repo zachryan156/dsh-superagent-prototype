@@ -232,3 +232,9 @@ it('does not signal a process that took the recorded service PID, and keeps a st
   expect(await run('stop', '--stop-timeout', '1')).toMatchObject({ code: 1, stderr: expect.stringContaining('Graceful stop timed out') })
   expect(existsSync(join(control('superagent'), 'manually-stopped'))).toBe(true)
 }, 20_000)
+it('lets the service manager stop without disabling the next boot recovery', async () => {
+  const pid = sleeper()
+  processes(service(pid))
+  expect(await run('stop', '--no-stop-marker', '--stop-timeout', '5')).toMatchObject({ code: 0 })
+  expect(existsSync(join(control('superagent'), 'manually-stopped'))).toBe(false)
+})

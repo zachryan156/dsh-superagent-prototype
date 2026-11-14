@@ -1,0 +1,18 @@
+[Unit]
+Description=dsh-superagent (%i)
+After=network-online.target
+ConditionPathExists=!@CONTROL@/manually-stopped
+
+[Service]
+Type=forking
+WorkingDirectory=@ROOT@
+ExecStart="@ROOT@/scripts/dsh-superagent" --profile %i --url @URL@ start --respect-stop
+ExecStop="@ROOT@/scripts/dsh-superagent" --profile %i --url @URL@ --no-stop-marker stop
+PIDFile=@CONTROL@/service.pid
+Restart=on-failure
+RestartSec=10s
+TimeoutStartSec=90s
+TimeoutStopSec=300s
+
+[Install]
+WantedBy=default.target

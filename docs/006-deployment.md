@@ -123,6 +123,20 @@ A Source that is still starting counts as normal operation. So does a Feishu bot
 
 `status` returns failed parts and their details under `errors`, and setup requirements under `setup`. `start` and `restart` print those problems as lines; they exit 1 if the service never comes up. Only an intentional `stop` pauses automatic recovery.
 
+To start the profile at user login and restart it after a process crash, render `deploy/dsh-superagent.service.in` as a user unit. Replace `@ROOT@` with the checkout path, `@CONTROL@` with `<root>/.artifacts/control/profiles/superagent`, and `@URL@` with `http://127.0.0.1:3082`; `%i` is the profile name.
+
+```sh
+root=$PWD
+control=$PWD/.artifacts/control/profiles/superagent
+mkdir -p "$HOME/.config/systemd/user"
+sed -e "s|@ROOT@|$root|g" -e "s|@CONTROL@|$control|g" -e 's|@URL@|http://127.0.0.1:3082|g' \
+  deploy/dsh-superagent.service.in > "$HOME/.config/systemd/user/dsh-superagent@.service"
+systemctl --user daemon-reload
+systemctl --user enable --now dsh-superagent@superagent.service
+```
+
+The unit's `Type=forking` and PID file let systemd restart the DSH process after a killed process or crash. Its stop command does not write the intentional-stop marker, so a normal user-manager shutdown is followed by recovery at the next login. Use `scripts/dsh-superagent stop` when the profile must remain stopped; the unit condition then skips automatic startup until a later explicit `start` or `restart`.
+
 Each profile stores logs and control files under `.artifacts/`:
 
 - Startup logs: `dsh-superagent-<profile>-<date>-<time>-<pid>.log`, where the pid belongs to the script. The newest 20 are kept.

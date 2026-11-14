@@ -216,6 +216,8 @@ def main():
     parser.add_argument('--timeout', type=float, default=60, help='Startup timeout in seconds.')
     parser.add_argument('--stop-timeout', type=float, default=300,
                         help='Graceful shutdown timeout in seconds; running Executor Sessions finish their step first.')
+    parser.add_argument('--no-stop-marker', action='store_true',
+                        help='For service managers: stop without disabling automatic recovery on the next boot.')
     parser.add_argument('--respect-stop', action='store_true',
                         help='For monitoring: never start/restart after an intentional stop.')
     args = parser.parse_args()
@@ -236,7 +238,7 @@ def main():
             return status(args)
         if args.action in ('stop', 'restart'):
             # Only a stop keeps automatic recovery off; a restart whose stop timed out leaves it on.
-            stop(args, intentional=args.action == 'stop')
+            stop(args, intentional=args.action == 'stop' and not args.no_stop_marker)
         if args.action in ('start', 'restart'):
             return start(args)
     return 0
